@@ -34,7 +34,7 @@ import de.sub.goobi.helper.exceptions.SwapException;
 public class JP2ValidationCommand implements IValidatorPlugin, IPlugin {
 	private static final Logger logger = Logger.getLogger(JP2ValidationCommand.class);
 
-	private String name = "JpylyzerValidation";
+	private String name = "intrandaJpylyzerValidation";
 
 	private Schritt step;
 
