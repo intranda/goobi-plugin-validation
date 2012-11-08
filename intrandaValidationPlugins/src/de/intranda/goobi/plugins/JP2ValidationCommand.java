@@ -161,7 +161,7 @@ public class JP2ValidationCommand implements IValidatorPlugin, IPlugin {
 								errorMessage += fail.getName() + "\n";
 							}
 						}
-						System.err.println(errorMessage);
+//						System.err.println(errorMessage);
 						files.put(jp2file, errorMessage);
 					}
 
@@ -182,11 +182,11 @@ public class JP2ValidationCommand implements IValidatorPlugin, IPlugin {
 				return false;
 			}
 
-			for (String key : files.keySet()) {
-				if (!files.get(key).equals("")) {
-					Helper.setFehlerMeldung("Error in " + key + ": " + files.get(key));
-					returnvalue = false;
-				}
+		}
+		for (String key : files.keySet()) {
+			if (!files.get(key).equals("")) {
+				Helper.setFehlerMeldung("Error in " + key + ": " + files.get(key));
+				returnvalue = false;
 			}
 		}
 
