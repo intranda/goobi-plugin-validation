@@ -16,6 +16,7 @@ import net.xeoh.plugins.base.annotations.PluginImplementation;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
+import org.goobi.production.cli.helper.WikiFieldHelper;
 import org.goobi.production.enums.PluginType;
 import org.goobi.production.plugin.interfaces.IPlugin;
 import org.goobi.production.plugin.interfaces.IValidatorPlugin;
@@ -26,6 +27,7 @@ import org.jdom.input.SAXBuilder;
 
 import de.sub.goobi.Beans.Prozess;
 import de.sub.goobi.Beans.Schritt;
+import de.sub.goobi.Persistence.ProzessDAO;
 import de.sub.goobi.helper.Helper;
 import de.sub.goobi.helper.exceptions.DAOException;
 import de.sub.goobi.helper.exceptions.SwapException;
@@ -186,8 +188,20 @@ public class JP2ValidationCommand implements IValidatorPlugin, IPlugin {
 		for (String key : files.keySet()) {
 			if (!files.get(key).equals("")) {
 				Helper.setFehlerMeldung("Error in " + key + ": " + files.get(key));
+				logger.info("Error in " + key + ": " + files.get(key));
+				step.getProzess().setWikifield(
+						WikiFieldHelper.getWikiMessage(step.getProzess().getWikifield(), "error", "Error in " + key + ": " + files.get(key)));
 				returnvalue = false;
 			}
+		}
+		if (!returnvalue) {
+			// saving step so wikifield gets saved
+			try {
+				new ProzessDAO().save(step.getProzess());
+			} catch (DAOException e) {
+				logger.error(e);
+			}
+			
 		}
 
 		return returnvalue;
