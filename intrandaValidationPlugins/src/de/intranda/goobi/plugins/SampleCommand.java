@@ -8,12 +8,14 @@ import org.goobi.production.plugin.interfaces.IValidatorPlugin;
 
 import de.sub.goobi.Beans.Prozess;
 import de.sub.goobi.Beans.Schritt;
+import de.sub.goobi.Persistence.apache.StepObject;
 import de.sub.goobi.helper.Helper;
 
 	@PluginImplementation
 	public class SampleCommand implements IValidatorPlugin, IPlugin {
 
 		private Schritt step;
+		private StepObject stepObject;
 		
 		@Override
 		public PluginType getType() {
@@ -53,6 +55,17 @@ import de.sub.goobi.helper.Helper;
 		@Override
 		public void setStep(Schritt step) {
 			this.step = step;
+			
+		}
+
+		@Override
+		public StepObject getStepObject() {
+			return stepObject;
+		}
+
+		@Override
+		public void setStepObject(StepObject so) {
+			this.stepObject = so;
 			
 		}
 		
