@@ -162,7 +162,7 @@ public class JP2ValidationCommand implements IValidatorPlugin, IPlugin {
 					@SuppressWarnings("unchecked")
 					List<Element> failedTests = tests.getChildren();
 					for (Element test : failedTests) {
-						String errorMessage = "File failed test " + test.getName() + "\n";
+						String errorMessage = "File failed test " + test.getName() + "<br/>";
 
 						@SuppressWarnings("unchecked")
 						List<Element> fails = test.getChildren();
@@ -171,9 +171,9 @@ public class JP2ValidationCommand implements IValidatorPlugin, IPlugin {
 								fail = (Element) fail.getChildren().get(0);
 							}
 							if (fail.getValue() != null && fail.getValue().length() > 0) {
-								errorMessage += fail.getName() + ": " + fail.getValue() + "\n";
+								errorMessage += " " + fail.getName() + ": " + fail.getValue() + "<br/>";
 							} else {
-								errorMessage += fail.getName() + "\n";
+								errorMessage += " " + fail.getName() + "<br/>";
 							}
 						}
 						// System.err.println(errorMessage);
