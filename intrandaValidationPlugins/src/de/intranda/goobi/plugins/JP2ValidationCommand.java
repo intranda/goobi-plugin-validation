@@ -7,6 +7,8 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +47,10 @@ public class JP2ValidationCommand implements IValidatorPlugin, IPlugin {
 	private Schritt step = null;
 
 	private StepObject stepObject = null;
+
+	private String resultPath = null;
+
+	private static boolean saveResult = true;
 
 	private static FilenameFilter jp2Filter = new FilenameFilter() {
 
@@ -126,7 +132,18 @@ public class JP2ValidationCommand implements IValidatorPlugin, IPlugin {
 			Helper.setFehlerMeldung("Found no jp2 files.");
 			return false;
 		}
-
+		if (saveResult) {
+			String datetime = new SimpleDateFormat("yyyy-mm-dd-hh-mm-ss").format(new Date());
+			resultPath = foldername + "../../validation/";
+			File resultFile = new File(resultPath);
+			if (!resultFile.exists() && !resultFile.mkdir()) {
+				Helper.setFehlerMeldung("Cannot create output directory.");
+				logger.error("Cannot create output directory.");
+				return false;
+			}
+			
+			resultPath = resultPath + datetime + "jpylyzer";
+		}
 		Map<String, String> files = new HashMap<String, String>();
 		for (String jp2file : jp2files) {
 			try {
@@ -181,7 +198,22 @@ public class JP2ValidationCommand implements IValidatorPlugin, IPlugin {
 					}
 
 				}
-				FileUtils.deleteQuietly(new File(xmlFile));
+//				FileUtils.deleteQuietly(new File(xmlFile));
+				if (!saveResult) {
+					FileUtils.deleteQuietly(new File(xmlFile));
+				} else {
+					File source = new File(xmlFile);
+
+					File dest = new File(resultPath);
+					if (!dest.exists() && !dest.mkdir()) {
+						Helper.setFehlerMeldung("Cannot create output directory.");
+						logger.error("Cannot create output directory.");
+						return false;
+					}
+					FileUtils.copyFileToDirectory(source, dest);
+					FileUtils.deleteQuietly(source);
+				}
+
 			} catch (JDOMException e) {
 				Helper.setFehlerMeldung("Cannot read jpylyzer output, it is not a valid xml file.");
 				logger.error(e);
@@ -207,7 +239,8 @@ public class JP2ValidationCommand implements IValidatorPlugin, IPlugin {
 							WikiFieldHelper.getWikiMessage(step.getProzess().getWikifield(), "error", "Error in " + key + ": " + files.get(key)));
 				} else {
 					ProcessObject po = ProcessManager.getProcessObjectForId(stepObject.getProcessId());
-					ProcessManager.addLogfile(WikiFieldHelper.getWikiMessage(po.getWikifield(), "error", "Error in " + key + ": " + files.get(key)), stepObject.getProcessId());
+					ProcessManager.addLogfile(WikiFieldHelper.getWikiMessage(po.getWikifield(), "error", "Error in " + key + ": " + files.get(key)),
+							stepObject.getProcessId());
 				}
 				returnvalue = false;
 			}
