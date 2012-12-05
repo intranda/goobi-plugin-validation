@@ -142,7 +142,7 @@ public class JP2ValidationCommand implements IValidatorPlugin, IPlugin {
 				return false;
 			}
 			
-			resultPath = resultPath + datetime + "jpylyzer";
+			resultPath = resultPath + datetime + "-jpylyzer";
 		}
 		Map<String, String> files = new HashMap<String, String>();
 		for (String jp2file : jp2files) {
