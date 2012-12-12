@@ -95,6 +95,7 @@ public class JP2ValidationCommand implements IValidatorPlugin, IPlugin {
 		boolean returnvalue = true;
 		File folder = null;
 		String foldername;
+		String returnMessage = "";
 		try {
 			if (step != null) {
 				foldername = step.getProzess().getImagesTifDirectory(false);
@@ -125,11 +126,16 @@ public class JP2ValidationCommand implements IValidatorPlugin, IPlugin {
 
 		if (!folder.exists() || !folder.isDirectory()) {
 			Helper.setFehlerMeldung("Folder " + folder.getName() + " does not exist");
+			returnMessage = "Folder " + folder.getName() + " does not exist";
+			updateGoobi(returnMessage);
 			return false;
 		}
 		String[] jp2files = folder.list(jp2Filter);
 		if (jp2files == null || jp2files.length == 0) {
 			Helper.setFehlerMeldung("Found no jp2 files.");
+			returnMessage = "Found no jp2 files.";
+			updateGoobi(returnMessage);
+
 			return false;
 		}
 		if (saveResult) {
@@ -139,6 +145,7 @@ public class JP2ValidationCommand implements IValidatorPlugin, IPlugin {
 			if (!resultFile.exists() && !resultFile.mkdir()) {
 				Helper.setFehlerMeldung("Cannot create output directory.");
 				logger.error("Cannot create output directory.");
+				updateGoobi("Cannot create output directory.");
 				return false;
 			}
 			
@@ -217,14 +224,17 @@ public class JP2ValidationCommand implements IValidatorPlugin, IPlugin {
 			} catch (JDOMException e) {
 				Helper.setFehlerMeldung("Cannot read jpylyzer output, it is not a valid xml file.");
 				logger.error(e);
+				updateGoobi("Cannot read jpylyzer output, it is not a valid xml file.");
 				return false;
 
 			} catch (IOException e) {
 				Helper.setFehlerMeldung("Cannot read jpylyzer output.", e);
+				updateGoobi("Cannot read jpylyzer output.");
 				logger.error(e);
 				return false;
 			} catch (InterruptedException e) {
 				Helper.setFehlerMeldung("Cannot call jpylyzer.", e);
+				updateGoobi("Cannot call jpylyzer.");
 				logger.error(e);
 				return false;
 			}
@@ -256,6 +266,18 @@ public class JP2ValidationCommand implements IValidatorPlugin, IPlugin {
 		}
 
 		return returnvalue;
+	}
+	
+	
+	private void updateGoobi(String message) {
+		if (step != null) {
+			step.getProzess().setWikifield(
+					WikiFieldHelper.getWikiMessage(step.getProzess().getWikifield(), "error", message));
+		} else {
+			ProcessObject po = ProcessManager.getProcessObjectForId(stepObject.getProcessId());
+			ProcessManager.addLogfile(WikiFieldHelper.getWikiMessage(po.getWikifield(), "error", message),
+					stepObject.getProcessId());
+		}
 	}
 
 	public static String callShell(String command) throws IOException, InterruptedException {
