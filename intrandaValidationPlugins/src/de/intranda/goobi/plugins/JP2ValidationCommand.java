@@ -29,14 +29,12 @@ import org.jdom.input.SAXBuilder;
 
 import de.sub.goobi.Beans.Prozess;
 import de.sub.goobi.Beans.Schritt;
-import de.sub.goobi.Persistence.ProzessDAO;
 import de.sub.goobi.Persistence.apache.FolderInformation;
 import de.sub.goobi.Persistence.apache.ProcessManager;
 import de.sub.goobi.Persistence.apache.ProcessObject;
+import de.sub.goobi.Persistence.apache.StepManager;
 import de.sub.goobi.Persistence.apache.StepObject;
 import de.sub.goobi.helper.Helper;
-import de.sub.goobi.helper.exceptions.DAOException;
-import de.sub.goobi.helper.exceptions.SwapException;
 
 @PluginImplementation
 public class JP2ValidationCommand implements IValidatorPlugin, IPlugin {
@@ -44,7 +42,7 @@ public class JP2ValidationCommand implements IValidatorPlugin, IPlugin {
 
 	private String name = "intrandaJpylyzerValidation";
 
-	private Schritt step = null;
+	// private Schritt step = null;
 
 	private StepObject stepObject = null;
 
@@ -61,6 +59,11 @@ public class JP2ValidationCommand implements IValidatorPlugin, IPlugin {
 		}
 	};
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see org.goobi.production.plugin.interfaces.IPlugin#getType()
+	 */
 	@Override
 	public PluginType getType() {
 		return PluginType.Validation;
@@ -78,12 +81,13 @@ public class JP2ValidationCommand implements IValidatorPlugin, IPlugin {
 
 	@Override
 	public Schritt getStep() {
-		return step;
+		return null;
 	}
 
 	@Override
 	public void setStep(Schritt step) {
-		this.step = step;
+		stepObject = StepManager.getStepById(step.getId());
+		// this.step = step;
 	}
 
 	@Override
@@ -96,33 +100,33 @@ public class JP2ValidationCommand implements IValidatorPlugin, IPlugin {
 		File folder = null;
 		String foldername;
 		String returnMessage = "";
-		try {
-			if (step != null) {
-				foldername = step.getProzess().getImagesTifDirectory(false);
-				folder = new File(foldername);
-			} else {
-				ProcessObject po = ProcessManager.getProcessObjectForId(stepObject.getProcessId());
-				FolderInformation fi = new FolderInformation(stepObject.getProcessId(), po.getTitle());
-				foldername = fi.getImagesTifDirectory(false);
-				folder = new File(foldername);
-			}
-		} catch (SwapException e) {
-			logger.error(e);
-			Helper.setFehlerMeldung("Error " + e.getMessage());
-			return false;
-		} catch (DAOException e) {
-			logger.error(e);
-			Helper.setFehlerMeldung("Error " + e.getMessage());
-			return false;
-		} catch (IOException e) {
-			logger.error(e);
-			Helper.setFehlerMeldung("Error " + e.getMessage());
-			return false;
-		} catch (InterruptedException e) {
-			logger.error(e);
-			Helper.setFehlerMeldung("Error " + e.getMessage());
-			return false;
-		}
+		// try {
+		// if (step != null) {
+		// foldername = step.getProzess().getImagesTifDirectory(false);
+		// folder = new File(foldername);
+		// } else {
+		ProcessObject po = ProcessManager.getProcessObjectForId(stepObject.getProcessId());
+		FolderInformation fi = new FolderInformation(stepObject.getProcessId(), po.getTitle());
+		foldername = fi.getImagesTifDirectory(false);
+		folder = new File(foldername);
+		// }
+		// } catch (SwapException e) {
+		// logger.error(e);
+		// Helper.setFehlerMeldung("Error " + e.getMessage());
+		// return false;
+		// } catch (DAOException e) {
+		// logger.error(e);
+		// Helper.setFehlerMeldung("Error " + e.getMessage());
+		// return false;
+		// } catch (IOException e) {
+		// logger.error(e);
+		// Helper.setFehlerMeldung("Error " + e.getMessage());
+		// return false;
+		// } catch (InterruptedException e) {
+		// logger.error(e);
+		// Helper.setFehlerMeldung("Error " + e.getMessage());
+		// return false;
+		// }
 
 		if (!folder.exists() || !folder.isDirectory()) {
 			Helper.setFehlerMeldung("Folder " + folder.getName() + " does not exist");
@@ -139,7 +143,7 @@ public class JP2ValidationCommand implements IValidatorPlugin, IPlugin {
 			return false;
 		}
 		if (saveResult) {
-			String datetime = new SimpleDateFormat("yyyy-mm-dd-hh-mm-ss").format(new Date());
+			String datetime = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
 			resultPath = foldername + "../../validation/";
 			File resultFile = new File(resultPath);
 			if (!resultFile.exists() && !resultFile.mkdir()) {
@@ -148,8 +152,8 @@ public class JP2ValidationCommand implements IValidatorPlugin, IPlugin {
 				updateGoobi("Cannot create output directory.");
 				return false;
 			}
-			
-			resultPath = resultPath + datetime + "-jpylyzer";
+
+			resultPath = resultPath + datetime + "_jpylyzer";
 		}
 		Map<String, String> files = new HashMap<String, String>();
 		for (String jp2file : jp2files) {
@@ -205,7 +209,7 @@ public class JP2ValidationCommand implements IValidatorPlugin, IPlugin {
 					}
 
 				}
-//				FileUtils.deleteQuietly(new File(xmlFile));
+				// FileUtils.deleteQuietly(new File(xmlFile));
 				if (!saveResult) {
 					FileUtils.deleteQuietly(new File(xmlFile));
 				} else {
@@ -244,40 +248,38 @@ public class JP2ValidationCommand implements IValidatorPlugin, IPlugin {
 			if (!files.get(key).equals("")) {
 				Helper.setFehlerMeldung("Error in " + key + ": " + files.get(key));
 				logger.info("Error in " + key + ": " + files.get(key));
-				if (step != null) {
-					step.getProzess().setWikifield(
-							WikiFieldHelper.getWikiMessage(step.getProzess().getWikifield(), "error", "Error in " + key + ": " + files.get(key)));
-				} else {
-					ProcessObject po = ProcessManager.getProcessObjectForId(stepObject.getProcessId());
-					ProcessManager.addLogfile(WikiFieldHelper.getWikiMessage(po.getWikifield(), "error", "Error in " + key + ": " + files.get(key)),
-							stepObject.getProcessId());
-				}
+				// if (step != null) {
+				// step.getProzess().setWikifield(
+				// WikiFieldHelper.getWikiMessage(step.getProzess().getWikifield(), "error", "Error in " + key + ": " + files.get(key)));
+				// } else {
+				// ProcessObject po = ProcessManager.getProcessObjectForId(stepObject.getProcessId());
+				ProcessManager.addLogfile(WikiFieldHelper.getWikiMessage(po.getWikifield(), "error", "Error in " + key + ": " + files.get(key)),
+						stepObject.getProcessId());
+				// }
 				returnvalue = false;
 			}
 		}
-		if (!returnvalue && step != null) {
-			// saving step so wikifield gets saved
-			try {
-				new ProzessDAO().save(step.getProzess());
-			} catch (DAOException e) {
-				logger.error(e);
-			}
-
-		}
+		// if (!returnvalue && step != null) {
+		// // saving step so wikifield gets saved
+		// try {
+		// new ProzessDAO().save(step.getProzess());
+		// } catch (DAOException e) {
+		// logger.error(e);
+		// }
+		//
+		// }
 
 		return returnvalue;
 	}
-	
-	
+
 	private void updateGoobi(String message) {
-		if (step != null) {
-			step.getProzess().setWikifield(
-					WikiFieldHelper.getWikiMessage(step.getProzess().getWikifield(), "error", message));
-		} else {
-			ProcessObject po = ProcessManager.getProcessObjectForId(stepObject.getProcessId());
-			ProcessManager.addLogfile(WikiFieldHelper.getWikiMessage(po.getWikifield(), "error", message),
-					stepObject.getProcessId());
-		}
+		// if (step != null) {
+		// step.getProzess().setWikifield(
+		// WikiFieldHelper.getWikiMessage(step.getProzess().getWikifield(), "error", message));
+		// } else {
+		ProcessObject po = ProcessManager.getProcessObjectForId(stepObject.getProcessId());
+		ProcessManager.addLogfile(WikiFieldHelper.getWikiMessage(po.getWikifield(), "error", message), stepObject.getProcessId());
+		// }
 	}
 
 	public static String callShell(String command) throws IOException, InterruptedException {
@@ -339,4 +341,7 @@ public class JP2ValidationCommand implements IValidatorPlugin, IPlugin {
 		this.stepObject = so;
 	}
 
+	public static void main(String[] args) {
+		System.out.println(new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date()));
+	}
 }
