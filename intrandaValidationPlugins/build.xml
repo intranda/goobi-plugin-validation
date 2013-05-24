@@ -7,7 +7,7 @@
 	<!-- ================================= 
 	        properties             
 	     ================================= -->
-	<property name="filename" value="IntrandaValidationPlugin" />
+	<property name="filename" value="intrandaValidationPlugins" />
 	<property name="dir.build" value="bin" />
 	<property name="dir.deploy" value="deploy" />
 	<property name="pluginFolderWin" value="C:/Goobi/plugins/validation/" />
