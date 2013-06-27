@@ -14,10 +14,10 @@
 	<property name="pluginFolderUnix" value="/opt/digiverso/goobi/plugins/validation/" />
 
 	<path id="classpath">
-		<fileset dir="../Goobi/WEB-INF/lib" />
-		<fileset dir="/opt/digiverso/libs" />
+	    <fileset dir="/opt/digiverso/goobilibs/lib"/> 
+	    <fileset dir="/opt/digiverso/libs" />
 	</path>
-
+	
 	<tstamp>
 		<format property="tstamped-file-name" pattern="yyyy-MM-dd" locale="en,UK" />
 	</tstamp>
@@ -146,12 +146,7 @@
 				<attribute name="Main-Class" value="de.intranda.goobi.PluginInfo" />
 				<attribute name="Class-Path" value="${libs.project}" />
 			</manifest>
-			<fileset dir="bin">
-				<include name="de/intranda/goobi/plugins.txt" />
-				<include name="de/intranda/goobi/PluginInfo.class" />
-				<include name="de/intranda/goobi/plugins/" />
-				<include name="com/googlecode/fascinator/redbox/" />
-			</fileset>
+			<fileset dir="bin" />
 		</jar>
 	</target>
 
