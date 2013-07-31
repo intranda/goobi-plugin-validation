@@ -7,17 +7,17 @@
 	<!-- ================================= 
 	        properties             
 	     ================================= -->
-	<property name="filename" value="intrandaValidationPlugins" />
+	<property name="filename" value="intrandaValidationPlugin" />
 	<property name="dir.build" value="bin" />
 	<property name="dir.deploy" value="deploy" />
 	<property name="pluginFolderWin" value="C:/Goobi/plugins/validation/" />
 	<property name="pluginFolderUnix" value="/opt/digiverso/goobi/plugins/validation/" />
 
 	<path id="classpath">
-	    <fileset dir="/opt/digiverso/goobilibs/lib"/> 
+	    <fileset dir="/opt/digiverso/goobi-jsf2/lib"/> 
 	    <fileset dir="/opt/digiverso/libs" />
 	</path>
-	
+
 	<tstamp>
 		<format property="tstamped-file-name" pattern="yyyy-MM-dd" locale="en,UK" />
 	</tstamp>
@@ -131,7 +131,7 @@
 				<attribute name="Main-Class" value="de.intranda.goobi.PluginInfo" />
 				<attribute name="Class-Path" value="${libs.project}" />
 			</manifest>
-			<fileset dir="bin" />
+			<fileset dir="bin"/>
 		</jar>
 	</target>
 
