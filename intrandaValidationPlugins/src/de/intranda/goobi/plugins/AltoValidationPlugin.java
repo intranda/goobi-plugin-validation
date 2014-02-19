@@ -167,6 +167,8 @@ public class AltoValidationPlugin implements IValidatorPlugin, IPlugin {
                 if (!validateAgainstXsd(xml)) {
                     writer.write(xml + " is not valid.\n");
                     allValid = false;
+                } else {
+                    writer.write(xml + " is valid.\n");
                 }
             } catch (SAXException e) {
                 String message = "Could not parse " + xsdFile.getAbsolutePath();
