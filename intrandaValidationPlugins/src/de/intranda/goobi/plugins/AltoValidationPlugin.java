@@ -141,6 +141,7 @@ public class AltoValidationPlugin implements IValidatorPlugin, IPlugin {
             schema = factory.newSchema(new StreamSource(xsdFile));
         } catch (SAXException e1) {
             String message = "Can not parse " + xsdFile;
+            logger.error(e1);
             Helper.setFehlerMeldung(message);
             ProcessManager.addLogfile(WikiFieldHelper.getWikiMessage(step.getProzess().getWikifield(), "error", message), step.getProzess().getId());
             return false;
@@ -193,6 +194,7 @@ public class AltoValidationPlugin implements IValidatorPlugin, IPlugin {
             return false;
         }
         if (!allValid) {
+            Helper.setFehlerMeldung("Some alto files are not valid.");
             return false;
         }
         return true;
