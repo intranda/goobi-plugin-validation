@@ -20,9 +20,10 @@ import javax.xml.validation.Validator;
 import net.xeoh.plugins.base.annotations.PluginImplementation;
 
 import org.apache.log4j.Logger;
+import org.goobi.beans.LogEntry;
 import org.goobi.beans.Process;
 import org.goobi.beans.Step;
-import org.goobi.production.cli.helper.WikiFieldHelper;
+import org.goobi.production.enums.LogType;
 import org.goobi.production.enums.PluginType;
 import org.goobi.production.plugin.interfaces.IPlugin;
 import org.goobi.production.plugin.interfaces.IValidatorPlugin;
@@ -61,7 +62,6 @@ public class AltoValidationPlugin implements IValidatorPlugin, IPlugin {
         return PLUGIN_NAME;
     }
 
-    @Override
     public String getDescription() {
         return PLUGIN_NAME;
     }
@@ -118,7 +118,16 @@ public class AltoValidationPlugin implements IValidatorPlugin, IPlugin {
         if (jp2Files.size() != altoFiles.size()) {
             String message = "Numbers of jp2-files and alto-files do not match!";
             Helper.setFehlerMeldung(message);
-            ProcessManager.addLogfile(WikiFieldHelper.getWikiMessage(step.getProzess().getWikifield(), "error", message), step.getProzess().getId());
+            LogEntry logEntry = new LogEntry();
+            logEntry.setContent(message);
+            logEntry.setCreationDate(new Date());
+            logEntry.setProcessId(step.getProzess().getId());
+            logEntry.setType(LogType.ERROR);
+
+            logEntry.setUserName("automatic");
+
+            ProcessManager.saveLogEntry(logEntry);
+
             return false;
         }
         Collections.sort(altoFiles);
@@ -130,8 +139,15 @@ public class AltoValidationPlugin implements IValidatorPlugin, IPlugin {
             if (!jp2Basename.equals(altoBasename)) {
                 String message = "Names do not match! (" + altoBasename + " and " + jp2Basename + ")";
                 Helper.setFehlerMeldung(message);
-                ProcessManager.addLogfile(WikiFieldHelper.getWikiMessage(step.getProzess().getWikifield(), "error", message), step.getProzess()
-                        .getId());
+                LogEntry logEntry = new LogEntry();
+                logEntry.setContent(message);
+                logEntry.setCreationDate(new Date());
+                logEntry.setProcessId(step.getProzess().getId());
+                logEntry.setType(LogType.ERROR);
+
+                logEntry.setUserName("automatic");
+
+                ProcessManager.saveLogEntry(logEntry);
                 return false;
             }
             i++;
@@ -143,7 +159,15 @@ public class AltoValidationPlugin implements IValidatorPlugin, IPlugin {
             String message = "Can not parse " + xsdFile;
             logger.error(e1);
             Helper.setFehlerMeldung(message);
-            ProcessManager.addLogfile(WikiFieldHelper.getWikiMessage(step.getProzess().getWikifield(), "error", message), step.getProzess().getId());
+            LogEntry logEntry = new LogEntry();
+            logEntry.setContent(message);
+            logEntry.setCreationDate(new Date());
+            logEntry.setProcessId(step.getProzess().getId());
+            logEntry.setType(LogType.ERROR);
+
+            logEntry.setUserName("automatic");
+
+            ProcessManager.saveLogEntry(logEntry);
             return false;
         }
 
@@ -158,7 +182,15 @@ public class AltoValidationPlugin implements IValidatorPlugin, IPlugin {
 
             String message = "Can not open " + validationFile + " for writing";
             Helper.setFehlerMeldung(message);
-            ProcessManager.addLogfile(WikiFieldHelper.getWikiMessage(step.getProzess().getWikifield(), "error", message), step.getProzess().getId());
+            LogEntry logEntry = new LogEntry();
+            logEntry.setContent(message);
+            logEntry.setCreationDate(new Date());
+            logEntry.setProcessId(step.getProzess().getId());
+            logEntry.setType(LogType.ERROR);
+
+            logEntry.setUserName("automatic");
+
+            ProcessManager.saveLogEntry(logEntry);
             return false;
         }
 
@@ -174,14 +206,28 @@ public class AltoValidationPlugin implements IValidatorPlugin, IPlugin {
             } catch (SAXException e) {
                 String message = "Could not parse " + xsdFile.getAbsolutePath();
                 Helper.setFehlerMeldung(message);
-                ProcessManager.addLogfile(WikiFieldHelper.getWikiMessage(step.getProzess().getWikifield(), "error", message), step.getProzess()
-                        .getId());
+                LogEntry logEntry = new LogEntry();
+                logEntry.setContent(message);
+                logEntry.setCreationDate(new Date());
+                logEntry.setProcessId(step.getProzess().getId());
+                logEntry.setType(LogType.ERROR);
+
+                logEntry.setUserName("automatic");
+
+                ProcessManager.saveLogEntry(logEntry);
                 allValid = false;
             } catch (IOException e) {
                 String message = "Could not read " + xml;
                 Helper.setFehlerMeldung(message);
-                ProcessManager.addLogfile(WikiFieldHelper.getWikiMessage(step.getProzess().getWikifield(), "error", message), step.getProzess()
-                        .getId());
+                LogEntry logEntry = new LogEntry();
+                logEntry.setContent(message);
+                logEntry.setCreationDate(new Date());
+                logEntry.setProcessId(step.getProzess().getId());
+                logEntry.setType(LogType.ERROR);
+
+                logEntry.setUserName("automatic");
+
+                ProcessManager.saveLogEntry(logEntry);
                 allValid = false;
             }
         }
@@ -190,7 +236,15 @@ public class AltoValidationPlugin implements IValidatorPlugin, IPlugin {
         } catch (IOException e) {
             String message = "Can not close " + validationFile + " from writing";
             Helper.setFehlerMeldung(message);
-            ProcessManager.addLogfile(WikiFieldHelper.getWikiMessage(step.getProzess().getWikifield(), "error", message), step.getProzess().getId());
+            LogEntry logEntry = new LogEntry();
+            logEntry.setContent(message);
+            logEntry.setCreationDate(new Date());
+            logEntry.setProcessId(step.getProzess().getId());
+            logEntry.setType(LogType.ERROR);
+
+            logEntry.setUserName("automatic");
+
+            ProcessManager.saveLogEntry(logEntry);
             return false;
         }
         if (!allValid) {

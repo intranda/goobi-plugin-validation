@@ -18,7 +18,7 @@ import net.xeoh.plugins.base.annotations.PluginImplementation;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
-import org.goobi.production.cli.helper.WikiFieldHelper;
+import org.goobi.production.enums.LogType;
 import org.goobi.production.enums.PluginType;
 import org.goobi.production.plugin.interfaces.IPlugin;
 import org.goobi.production.plugin.interfaces.IValidatorPlugin;
@@ -26,6 +26,7 @@ import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.jdom.input.SAXBuilder;
+import org.goobi.beans.LogEntry;
 import org.goobi.beans.Process;
 import org.goobi.beans.Step;
 
@@ -71,7 +72,7 @@ public class JP2ValidationCommand implements IValidatorPlugin, IPlugin {
 		return name;
 	}
 
-	@Override
+	
 	public String getDescription() {
 		return name;
 	}
@@ -242,31 +243,38 @@ public class JP2ValidationCommand implements IValidatorPlugin, IPlugin {
 				// WikiFieldHelper.getWikiMessage(step.getProzess().getWikifield(), "error", "Error in " + key + ": " + files.get(key)));
 				// } else {
 				// ProcessObject po = ProcessManager.getProcessObjectForId(stepObject.getProcessId());
-				ProcessManager.addLogfile(WikiFieldHelper.getWikiMessage(step.getProzess().getWikifield(), "error", "Error in " + key + ": " + files.get(key)), step.getProzess().getId());
 
+		        LogEntry logEntry = new LogEntry();
+		        logEntry.setContent("Error in " + key + ": " + files.get(key));
+		        logEntry.setCreationDate(new Date());
+		        logEntry.setProcessId(step.getProzess().getId());
+		        logEntry.setType(LogType.ERROR);
+
+		        logEntry.setUserName("automatic");
+
+		        ProcessManager.saveLogEntry(logEntry);
+				
+				
 				// }
 				returnvalue = false;
 			}
 		}
-		// if (!returnvalue && step != null) {
-		// // saving step so wikifield gets saved
-		// try {
-		// new ProzessDAO().save(step.getProzess());
-		// } catch (DAOException e) {
-		// logger.error(e);
-		// }
-		//
-		// }
+		
 
 		return returnvalue;
 	}
 
 	private void updateGoobi(String message) {
-		// if (step != null) {
-		// step.getProzess().setWikifield(
-		// WikiFieldHelper.getWikiMessage(step.getProzess().getWikifield(), "error", message));
-		// } else {
-        ProcessManager.addLogfile(WikiFieldHelper.getWikiMessage(step.getProzess().getWikifield(), "error", message), step.getProzess().getId());
+
+        LogEntry logEntry = new LogEntry();
+        logEntry.setContent(message);
+        logEntry.setCreationDate(new Date());
+        logEntry.setProcessId(step.getProzess().getId());
+        logEntry.setType(LogType.ERROR);
+
+        logEntry.setUserName("automatic");
+        ProcessManager.saveLogEntry(logEntry);
+
 		// }
 	}
 
