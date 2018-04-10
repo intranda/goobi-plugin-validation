@@ -85,7 +85,7 @@ public class AltoValidationPlugin implements IValidatorPlugin, IPlugin {
             logger.error(e);
         }
         try {
-            altoFolder = new File(step.getProzess().getAltoDirectory());
+            altoFolder = new File(step.getProzess().getOcrAltoDirectory());
         } catch (SwapException e) {
             logger.error(e);
         } catch (DAOException e) {
