@@ -1,11 +1,14 @@
 package de.intranda.goobi.plugins;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.FilenameFilter;
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.DirectoryStream;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -16,8 +19,6 @@ import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
-
-import net.xeoh.plugins.base.annotations.PluginImplementation;
 
 import org.apache.log4j.Logger;
 import org.goobi.beans.LogEntry;
@@ -31,284 +32,328 @@ import org.xml.sax.SAXException;
 
 import de.sub.goobi.config.ConfigurationHelper;
 import de.sub.goobi.helper.Helper;
+import de.sub.goobi.helper.StorageProvider;
 import de.sub.goobi.helper.exceptions.DAOException;
 import de.sub.goobi.helper.exceptions.SwapException;
 import de.sub.goobi.persistence.managers.ProcessManager;
+import net.xeoh.plugins.base.annotations.PluginImplementation;
 
 @PluginImplementation
 public class AltoValidationPlugin implements IValidatorPlugin, IPlugin {
 
-    private static final Logger logger = Logger.getLogger(AltoValidationPlugin.class);
+	private static final Logger logger = Logger.getLogger(AltoValidationPlugin.class);
 
-    private static final String PLUGIN_NAME = "AltoValidation";
-    private static File xsdFile = null;
-    private static SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-    private static Schema schema;
-    private static Validator validator;
+	private static final String PLUGIN_NAME = "AltoValidation";
+	private static Path xsdFile = null;
+	private static SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+	private static Schema schema;
+	private static Validator validator;
 
-    private File jp2Folder = null;
-    private File altoFolder = null;
-    private File validationFolder = null;
+	private Path jp2Folder = null;
+	private Path altoFolder = null;
+	private Path validationFolder = null;
 
-    private Step step;
+	private Step step;
 
-    @Override
-    public PluginType getType() {
-        return PluginType.Validation;
-    }
+	@Override
+	public PluginType getType() {
+		return PluginType.Validation;
+	}
 
-    @Override
-    public String getTitle() {
-        return PLUGIN_NAME;
-    }
+	@Override
+	public String getTitle() {
+		return PLUGIN_NAME;
+	}
 
-    public String getDescription() {
-        return PLUGIN_NAME;
-    }
+	public String getDescription() {
+		return PLUGIN_NAME;
+	}
 
-    @Override
-    public void initialize(Process inProcess) {
+	@Override
+	public void initialize(Process inProcess) {
 
-    }
+	}
 
-    @Override
-    public boolean validate() {
-        try {
-            jp2Folder = new File(step.getProzess().getImagesOrigDirectory(true));
-        } catch (SwapException e) {
-            logger.error(e);
-        } catch (DAOException e) {
-            logger.error(e);
-        } catch (IOException e) {
-            logger.error(e);
-        } catch (InterruptedException e) {
-            logger.error(e);
-        }
-        try {
-            altoFolder = new File(step.getProzess().getOcrAltoDirectory());
-        } catch (SwapException e) {
-            logger.error(e);
-        } catch (DAOException e) {
-            logger.error(e);
-        } catch (IOException e) {
-            logger.error(e);
-        } catch (InterruptedException e) {
-            logger.error(e);
-        }
+	@Override
+	public boolean validate() {
+		try {
+			jp2Folder = Paths.get(step.getProzess().getImagesOrigDirectory(true));
+		} catch (SwapException e) {
+			logger.error(e);
+		} catch (DAOException e) {
+			logger.error(e);
+		} catch (IOException e) {
+			logger.error(e);
+		} catch (InterruptedException e) {
+			logger.error(e);
+		}
+		try {
+			altoFolder = Paths.get(step.getProzess().getOcrAltoDirectory());
+		} catch (SwapException e) {
+			logger.error(e);
+		} catch (DAOException e) {
+			logger.error(e);
+		} catch (IOException e) {
+			logger.error(e);
+		} catch (InterruptedException e) {
+			logger.error(e);
+		}
 
-        try {
-            validationFolder = new File(step.getProzess().getProcessDataDirectory() + "validation/alto/");
-            if (!validationFolder.exists()) {
-                validationFolder.mkdirs();
-            }
-        } catch (SwapException e) {
-            logger.error(e);
-        } catch (DAOException e) {
-            logger.error(e);
-        } catch (IOException e) {
-            logger.error(e);
-        } catch (InterruptedException e) {
-            logger.error(e);
-        }
+		try {
+			validationFolder = Paths.get(step.getProzess().getProcessDataDirectory() + "validation/alto/");
+			if (!Files.exists(validationFolder)) {
+				Files.createDirectories(validationFolder);
+			}
+		} catch (SwapException e) {
+			logger.error(e);
+		} catch (DAOException e) {
+			logger.error(e);
+		} catch (IOException e) {
+			logger.error(e);
+		} catch (InterruptedException e) {
+			logger.error(e);
+		}
 
-        xsdFile = new File(ConfigurationHelper.getInstance().getXsltFolder(), "alto-v2.0.xsd");
-        List<String> jp2Files = Arrays.asList(jp2Folder.list(jp2FilenameFilter));
-        List<File> altoFiles = Arrays.asList(altoFolder.listFiles(xmlFilenameFilter));
+		xsdFile = Paths.get(ConfigurationHelper.getInstance().getXsltFolder(), "alto-v2.0.xsd");
+		List<Path> jp2Files = StorageProvider.getInstance().listFiles(jp2Folder.toString(), jp2FileFilter);
+		List<Path> altoFiles = StorageProvider.getInstance().listFiles(altoFolder.toString(), xmlFileFilter);
+//		List<String> jp2Files = Arrays.asList(jp2Folder.list(jp2FilenameFilter));
+//		List<Path> altoFiles = StorageProvider.getInstance().listFiles(altoFolder.listFiles(xmlFilenameFilter));
 
-        if (jp2Files.size() != altoFiles.size()) {
-            String message = "Numbers of jp2-files and alto-files do not match!";
-            Helper.setFehlerMeldung(message);
-            LogEntry logEntry = new LogEntry();
-            logEntry.setContent(message);
-            logEntry.setCreationDate(new Date());
-            logEntry.setProcessId(step.getProzess().getId());
-            logEntry.setType(LogType.ERROR);
+		if (jp2Files.size() != altoFiles.size()) {
+			String message = "Numbers of jp2-files and alto-files do not match!";
+			Helper.setFehlerMeldung(message);
+			LogEntry logEntry = new LogEntry();
+			logEntry.setContent(message);
+			logEntry.setCreationDate(new Date());
+			logEntry.setProcessId(step.getProzess().getId());
+			logEntry.setType(LogType.ERROR);
 
-            logEntry.setUserName("automatic");
+			logEntry.setUserName("automatic");
 
-            ProcessManager.saveLogEntry(logEntry);
+			ProcessManager.saveLogEntry(logEntry);
 
-            return false;
-        }
-        Collections.sort(altoFiles);
-        Collections.sort(jp2Files);
-        int i = 0;
-        for (String str : jp2Files) {
-            String altoBasename = getBasename(altoFiles.get(i).getName());
-            String jp2Basename = getBasename(str);
-            if (!jp2Basename.equals(altoBasename)) {
-                String message = "Names do not match! (" + altoBasename + " and " + jp2Basename + ")";
-                Helper.setFehlerMeldung(message);
-                LogEntry logEntry = new LogEntry();
-                logEntry.setContent(message);
-                logEntry.setCreationDate(new Date());
-                logEntry.setProcessId(step.getProzess().getId());
-                logEntry.setType(LogType.ERROR);
+			return false;
+		}
+		Collections.sort(altoFiles);
+		Collections.sort(jp2Files);
+		int i = 0;
+		for (Path str : jp2Files) {
+			String altoBasename = getBasename(altoFiles.get(i).getFileName().toString());
+			String jp2Basename = getBasename(str.toString());
+			if (!jp2Basename.equals(altoBasename)) {
+				String message = "Names do not match! (" + altoBasename + " and " + jp2Basename + ")";
+				Helper.setFehlerMeldung(message);
+				LogEntry logEntry = new LogEntry();
+				logEntry.setContent(message);
+				logEntry.setCreationDate(new Date());
+				logEntry.setProcessId(step.getProzess().getId());
+				logEntry.setType(LogType.ERROR);
 
-                logEntry.setUserName("automatic");
+				logEntry.setUserName("automatic");
 
-                ProcessManager.saveLogEntry(logEntry);
-                return false;
-            }
-            i++;
-        }
+				ProcessManager.saveLogEntry(logEntry);
+				return false;
+			}
+			i++;
+		}
 
-        try {
-            schema = factory.newSchema(new StreamSource(xsdFile));
-        } catch (SAXException e1) {
-            String message = "Can not parse " + xsdFile;
-            logger.error(e1);
-            Helper.setFehlerMeldung(message);
-            LogEntry logEntry = new LogEntry();
-            logEntry.setContent(message);
-            logEntry.setCreationDate(new Date());
-            logEntry.setProcessId(step.getProzess().getId());
-            logEntry.setType(LogType.ERROR);
+		try {
+			schema = factory.newSchema(new StreamSource(StorageProvider.getInstance().newInputStream(xsdFile)));
+		} catch (SAXException e1) {
+			String message = "Can not parse " + xsdFile;
+			logger.error(e1);
+			Helper.setFehlerMeldung(message);
+			LogEntry logEntry = new LogEntry();
+			logEntry.setContent(message);
+			logEntry.setCreationDate(new Date());
+			logEntry.setProcessId(step.getProzess().getId());
+			logEntry.setType(LogType.ERROR);
 
-            logEntry.setUserName("automatic");
+			logEntry.setUserName("automatic");
 
-            ProcessManager.saveLogEntry(logEntry);
-            return false;
-        }
+			ProcessManager.saveLogEntry(logEntry);
+			return false;
+		} catch (IOException e1) {
 
-        validator = schema.newValidator();
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.GERMANY);
+			String message = "Can not open " + xsdFile;
+			Helper.setFehlerMeldung(message);
+			LogEntry logEntry = new LogEntry();
+			logEntry.setContent(message);
+			logEntry.setCreationDate(new Date());
+			logEntry.setProcessId(step.getProzess().getId());
+			logEntry.setType(LogType.ERROR);
 
-        File validationFile = new File(validationFolder, "altoValidation_" + format.format(new Date()) + ".txt");
-        FileWriter writer = null;
-        try {
-            writer = new FileWriter(validationFile);
-        } catch (IOException e1) {
+			logEntry.setUserName("automatic");
 
-            String message = "Can not open " + validationFile + " for writing";
-            Helper.setFehlerMeldung(message);
-            LogEntry logEntry = new LogEntry();
-            logEntry.setContent(message);
-            logEntry.setCreationDate(new Date());
-            logEntry.setProcessId(step.getProzess().getId());
-            logEntry.setType(LogType.ERROR);
+			ProcessManager.saveLogEntry(logEntry);
+			return false;
+		}
 
-            logEntry.setUserName("automatic");
+		validator = schema.newValidator();
+		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.GERMANY);
 
-            ProcessManager.saveLogEntry(logEntry);
-            return false;
-        }
+//		File validationFile = new File(validationFolder, "altoValidation_" + format.format(new Date()) + ".txt");
+		Path validationFile = Paths.get(validationFolder.toString(),
+				"altoValidation_" + format.format(new Date()) + ".txt");
+		BufferedWriter writer = null;
+		try {
+			writer = Files.newBufferedWriter(validationFile);
+		} catch (IOException e1) {
 
-        boolean allValid = true;
-        for (File xml : altoFiles) {
-            try {
-                if (!validateAgainstXsd(xml)) {
-                    writer.write(xml + " is not valid.\n");
-                    allValid = false;
-                } else {
-                    writer.write(xml + " is valid.\n");
-                }
-            } catch (SAXException e) {
-                String message = "Could not parse " + xsdFile.getAbsolutePath();
-                Helper.setFehlerMeldung(message);
-                LogEntry logEntry = new LogEntry();
-                logEntry.setContent(message);
-                logEntry.setCreationDate(new Date());
-                logEntry.setProcessId(step.getProzess().getId());
-                logEntry.setType(LogType.ERROR);
+			String message = "Can not open " + validationFile + " for writing";
+			Helper.setFehlerMeldung(message);
+			LogEntry logEntry = new LogEntry();
+			logEntry.setContent(message);
+			logEntry.setCreationDate(new Date());
+			logEntry.setProcessId(step.getProzess().getId());
+			logEntry.setType(LogType.ERROR);
 
-                logEntry.setUserName("automatic");
+			logEntry.setUserName("automatic");
 
-                ProcessManager.saveLogEntry(logEntry);
-                allValid = false;
-            } catch (IOException e) {
-                String message = "Could not read " + xml;
-                Helper.setFehlerMeldung(message);
-                LogEntry logEntry = new LogEntry();
-                logEntry.setContent(message);
-                logEntry.setCreationDate(new Date());
-                logEntry.setProcessId(step.getProzess().getId());
-                logEntry.setType(LogType.ERROR);
+			ProcessManager.saveLogEntry(logEntry);
+			return false;
+		}
 
-                logEntry.setUserName("automatic");
+		boolean allValid = true;
+		for (Path xml : altoFiles) {
+			try {
+				if (!validateAgainstXsd(xml)) {
+					writer.write(xml + " is not valid.\n");
+					allValid = false;
+				} else {
+					writer.write(xml + " is valid.\n");
+				}
+			} catch (SAXException e) {
+				String message = "Could not parse " + xsdFile.toAbsolutePath();
+				Helper.setFehlerMeldung(message);
+				LogEntry logEntry = new LogEntry();
+				logEntry.setContent(message);
+				logEntry.setCreationDate(new Date());
+				logEntry.setProcessId(step.getProzess().getId());
+				logEntry.setType(LogType.ERROR);
 
-                ProcessManager.saveLogEntry(logEntry);
-                allValid = false;
-            }
-        }
-        try {
-            writer.close();
-        } catch (IOException e) {
-            String message = "Can not close " + validationFile + " from writing";
-            Helper.setFehlerMeldung(message);
-            LogEntry logEntry = new LogEntry();
-            logEntry.setContent(message);
-            logEntry.setCreationDate(new Date());
-            logEntry.setProcessId(step.getProzess().getId());
-            logEntry.setType(LogType.ERROR);
+				logEntry.setUserName("automatic");
 
-            logEntry.setUserName("automatic");
+				ProcessManager.saveLogEntry(logEntry);
+				allValid = false;
+			} catch (IOException e) {
+				String message = "Could not read " + xml;
+				Helper.setFehlerMeldung(message);
+				LogEntry logEntry = new LogEntry();
+				logEntry.setContent(message);
+				logEntry.setCreationDate(new Date());
+				logEntry.setProcessId(step.getProzess().getId());
+				logEntry.setType(LogType.ERROR);
 
-            ProcessManager.saveLogEntry(logEntry);
-            return false;
-        }
-        if (!allValid) {
-            Helper.setFehlerMeldung("Some alto files are not valid.");
-            return false;
-        }
-        return true;
-    }
+				logEntry.setUserName("automatic");
 
-    static boolean validateAgainstXsd(File xmlFile) throws SAXException, IOException {
-        try {
-            validator.validate(new StreamSource(xmlFile));
-        } catch (SAXException e) {
-            return false;
-        }
-        return true;
-    }
+				ProcessManager.saveLogEntry(logEntry);
+				allValid = false;
+			}
+		}
+		try {
+			writer.flush();
+			writer.close();
+		} catch (IOException e) {
+			String message = "Can not close " + validationFile + " from writing";
+			Helper.setFehlerMeldung(message);
+			LogEntry logEntry = new LogEntry();
+			logEntry.setContent(message);
+			logEntry.setCreationDate(new Date());
+			logEntry.setProcessId(step.getProzess().getId());
+			logEntry.setType(LogType.ERROR);
 
-    private static String getBasename(String str) {
-        int startIndex = str.lastIndexOf(File.pathSeparatorChar);
-        startIndex = startIndex < 0 ? 0 : startIndex;
-        return str.substring(startIndex, str.lastIndexOf('.'));
-    }
+			logEntry.setUserName("automatic");
 
-    public static final FilenameFilter jp2FilenameFilter = new FilenameFilter() {
-        @Override
-        public boolean accept(File dir, String name) {
-            name = name.toLowerCase();
-            if (name.endsWith(".jp2") || name.endsWith(".JP2")) {
-                return true;
-            }
-            return false;
-        }
-    };
+			ProcessManager.saveLogEntry(logEntry);
+			return false;
+		}
+		if (!allValid) {
+			Helper.setFehlerMeldung("Some alto files are not valid.");
+			return false;
+		}
+		return true;
+	}
 
-    public static final FilenameFilter xmlFilenameFilter = new FilenameFilter() {
-        @Override
-        public boolean accept(File dir, String name) {
-            name = name.toLowerCase();
-            if (name.endsWith(".xml")) {
-                return true;
-            }
-            return false;
-        }
-    };
+	static boolean validateAgainstXsd(Path xmlFile) throws SAXException, IOException {
+		try (InputStream is = StorageProvider.getInstance().newInputStream(xmlFile)) {
+			validator.validate(new StreamSource(is));
+		} catch (SAXException e) {
+			return false;
+		}
+		return true;
+	}
 
-    @Override
-    public Step getStep() {
-        return step;
-    }
+	private static String getBasename(String str) {
+		int startIndex = str.lastIndexOf(FileSystems.getDefault().getSeparator());
+		startIndex = startIndex < 0 ? 0 : startIndex;
+		return str.substring(startIndex, str.lastIndexOf('.'));
+	}
 
-    @Override
-    public void setStep(Step step) {
-        this.step = step;
-    }
+	public static final DirectoryStream.Filter<Path> jp2FileFilter = new DirectoryStream.Filter<Path>() {
 
-    @Override
-    public Step getStepObject() {
-        return step;
-    }
+		@Override
+		public boolean accept(Path dir) throws IOException {
+			dir = Paths.get(dir.toString().toLowerCase());
+			if (dir.endsWith(".jp2") || dir.endsWith(".JP2")) {
+				return true;
+			}
+			return false;
+		}
+	};
+	public static final DirectoryStream.Filter<Path> xmlFileFilter = new DirectoryStream.Filter<Path>() {
 
-    @Override
-    public void setStepObject(Step so) {
-        this.step = so;
-    }
+		@Override
+		public boolean accept(Path dir) throws IOException {
+			dir = Paths.get(dir.toString().toLowerCase());
+			if (dir.endsWith(".xml")) {
+				return true;
+			}
+			return false;
+		}
+	};
+
+//	public static final FilenameFilter jp2FilenameFilter = new FilenameFilter() {
+//		@Override
+//		public boolean accept(File dir, String name) {
+//			name = name.toLowerCase();
+//			if (name.endsWith(".jp2") || name.endsWith(".JP2")) {
+//				return true;
+//			}
+//			return false;
+//		}
+//	};
+
+//	public static final FilenameFilter xmlFilenameFilter = new FilenameFilter() {
+//		@Override
+//		public boolean accept(File dir, String name) {
+//			name = name.toLowerCase();
+//			if (name.endsWith(".xml")) {
+//				return true;
+//			}
+//			return false;
+//		}
+//	};
+
+	@Override
+	public Step getStep() {
+		return step;
+	}
+
+	@Override
+	public void setStep(Step step) {
+		this.step = step;
+	}
+
+	@Override
+	public Step getStepObject() {
+		return step;
+	}
+
+	@Override
+	public void setStepObject(Step so) {
+		this.step = so;
+	}
 
 }
