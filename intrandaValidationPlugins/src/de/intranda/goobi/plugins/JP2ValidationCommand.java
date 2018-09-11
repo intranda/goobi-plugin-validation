@@ -1,7 +1,6 @@
 package de.intranda.goobi.plugins;
 
 import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -182,8 +181,7 @@ public class JP2ValidationCommand implements IValidatorPlugin, IPlugin {
 				String validationMessage = callShell(command);
 
 				String xmlFile = foldername + jp2file.replace("jp2", "xml").replace("JP2", "xml");
-				FileWriter fw = new FileWriter(xmlFile);
-				BufferedWriter out = new BufferedWriter(fw);
+				BufferedWriter out = Files.newBufferedWriter(Paths.get(xmlFile));
 				out.write(validationMessage);
 				out.close();
 

@@ -101,8 +101,9 @@ public class AltoValidationPlugin implements IValidatorPlugin, IPlugin {
 
 		try {
 			validationFolder = Paths.get(step.getProzess().getProcessDataDirectory() + "validation/alto/");
-			if (!Files.exists(validationFolder)) {
-				Files.createDirectories(validationFolder);
+			
+			if (!StorageProvider.getInstance().isDirectory(validationFolder)) {
+				StorageProvider.getInstance().createDirectories(validationFolder);
 			}
 		} catch (SwapException e) {
 			logger.error(e);
