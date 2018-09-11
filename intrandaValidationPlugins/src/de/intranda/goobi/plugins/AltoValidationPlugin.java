@@ -1,11 +1,11 @@
 package de.intranda.goobi.plugins;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystems;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
@@ -101,7 +101,7 @@ public class AltoValidationPlugin implements IValidatorPlugin, IPlugin {
 
 		try {
 			validationFolder = Paths.get(step.getProzess().getProcessDataDirectory() + "validation/alto/");
-			
+
 			if (!StorageProvider.getInstance().isDirectory(validationFolder)) {
 				StorageProvider.getInstance().createDirectories(validationFolder);
 			}
@@ -197,9 +197,46 @@ public class AltoValidationPlugin implements IValidatorPlugin, IPlugin {
 //		File validationFile = new File(validationFolder, "altoValidation_" + format.format(new Date()) + ".txt");
 		Path validationFile = Paths.get(validationFolder.toString(),
 				"altoValidation_" + format.format(new Date()) + ".txt");
-		BufferedWriter writer = null;
-		try {
-			writer = Files.newBufferedWriter(validationFile);
+
+		boolean allValid = true;
+		try (OutputStream os = StorageProvider.getInstance().newOutputStream(validationFile);
+				OutputStreamWriter writer = new OutputStreamWriter(os, "utf-8")) {
+			for (Path xml : altoFiles) {
+				try {
+					if (!validateAgainstXsd(xml)) {
+						writer.write(xml + " is not valid.\n");
+						allValid = false;
+					} else {
+						writer.write(xml + " is valid.\n");
+					}
+				} catch (SAXException e) {
+					String message = "Could not parse " + xsdFile.toAbsolutePath();
+					Helper.setFehlerMeldung(message);
+					LogEntry logEntry = new LogEntry();
+					logEntry.setContent(message);
+					logEntry.setCreationDate(new Date());
+					logEntry.setProcessId(step.getProzess().getId());
+					logEntry.setType(LogType.ERROR);
+
+					logEntry.setUserName("automatic");
+
+					ProcessManager.saveLogEntry(logEntry);
+					allValid = false;
+				} catch (IOException e) {
+					String message = "Could not read " + xml;
+					Helper.setFehlerMeldung(message);
+					LogEntry logEntry = new LogEntry();
+					logEntry.setContent(message);
+					logEntry.setCreationDate(new Date());
+					logEntry.setProcessId(step.getProzess().getId());
+					logEntry.setType(LogType.ERROR);
+
+					logEntry.setUserName("automatic");
+
+					ProcessManager.saveLogEntry(logEntry);
+					allValid = false;
+				}
+			}
 		} catch (IOException e1) {
 
 			String message = "Can not open " + validationFile + " for writing";
@@ -216,60 +253,8 @@ public class AltoValidationPlugin implements IValidatorPlugin, IPlugin {
 			return false;
 		}
 
-		boolean allValid = true;
-		for (Path xml : altoFiles) {
-			try {
-				if (!validateAgainstXsd(xml)) {
-					writer.write(xml + " is not valid.\n");
-					allValid = false;
-				} else {
-					writer.write(xml + " is valid.\n");
-				}
-			} catch (SAXException e) {
-				String message = "Could not parse " + xsdFile.toAbsolutePath();
-				Helper.setFehlerMeldung(message);
-				LogEntry logEntry = new LogEntry();
-				logEntry.setContent(message);
-				logEntry.setCreationDate(new Date());
-				logEntry.setProcessId(step.getProzess().getId());
-				logEntry.setType(LogType.ERROR);
-
-				logEntry.setUserName("automatic");
-
-				ProcessManager.saveLogEntry(logEntry);
-				allValid = false;
-			} catch (IOException e) {
-				String message = "Could not read " + xml;
-				Helper.setFehlerMeldung(message);
-				LogEntry logEntry = new LogEntry();
-				logEntry.setContent(message);
-				logEntry.setCreationDate(new Date());
-				logEntry.setProcessId(step.getProzess().getId());
-				logEntry.setType(LogType.ERROR);
-
-				logEntry.setUserName("automatic");
-
-				ProcessManager.saveLogEntry(logEntry);
-				allValid = false;
-			}
-		}
-		try {
-			writer.flush();
-			writer.close();
-		} catch (IOException e) {
-			String message = "Can not close " + validationFile + " from writing";
-			Helper.setFehlerMeldung(message);
-			LogEntry logEntry = new LogEntry();
-			logEntry.setContent(message);
-			logEntry.setCreationDate(new Date());
-			logEntry.setProcessId(step.getProzess().getId());
-			logEntry.setType(LogType.ERROR);
-
-			logEntry.setUserName("automatic");
-
-			ProcessManager.saveLogEntry(logEntry);
-			return false;
-		}
+		
+		
 		if (!allValid) {
 			Helper.setFehlerMeldung("Some alto files are not valid.");
 			return false;
