@@ -123,16 +123,7 @@ public class AltoValidationPlugin implements IValidatorPlugin, IPlugin {
 
 		if (jp2Files.size() != altoFiles.size()) {
 			String message = "Numbers of jp2-files and alto-files do not match!";
-			Helper.setFehlerMeldung(message);
-			LogEntry logEntry = new LogEntry();
-			logEntry.setContent(message);
-			logEntry.setCreationDate(new Date());
-			logEntry.setProcessId(step.getProzess().getId());
-			logEntry.setType(LogType.ERROR);
-
-			logEntry.setUserName("automatic");
-
-			ProcessManager.saveLogEntry(logEntry);
+			writeErrorToLog(message);
 
 			return false;
 		}
@@ -144,50 +135,23 @@ public class AltoValidationPlugin implements IValidatorPlugin, IPlugin {
 			String jp2Basename = getBasename(str.toString());
 			if (!jp2Basename.equals(altoBasename)) {
 				String message = "Names do not match! (" + altoBasename + " and " + jp2Basename + ")";
-				Helper.setFehlerMeldung(message);
-				LogEntry logEntry = new LogEntry();
-				logEntry.setContent(message);
-				logEntry.setCreationDate(new Date());
-				logEntry.setProcessId(step.getProzess().getId());
-				logEntry.setType(LogType.ERROR);
-
-				logEntry.setUserName("automatic");
-
-				ProcessManager.saveLogEntry(logEntry);
+				writeErrorToLog(message);
 				return false;
 			}
 			i++;
 		}
 
-		try {
-			schema = factory.newSchema(new StreamSource(StorageProvider.getInstance().newInputStream(xsdFile)));
+		try (InputStream is =StorageProvider.getInstance().newInputStream(xsdFile)){
+			schema = factory.newSchema(new StreamSource(is));
 		} catch (SAXException e1) {
 			String message = "Can not parse " + xsdFile;
 			logger.error(e1);
-			Helper.setFehlerMeldung(message);
-			LogEntry logEntry = new LogEntry();
-			logEntry.setContent(message);
-			logEntry.setCreationDate(new Date());
-			logEntry.setProcessId(step.getProzess().getId());
-			logEntry.setType(LogType.ERROR);
-
-			logEntry.setUserName("automatic");
-
-			ProcessManager.saveLogEntry(logEntry);
+			writeErrorToLog(message);
 			return false;
 		} catch (IOException e1) {
 
 			String message = "Can not open " + xsdFile;
-			Helper.setFehlerMeldung(message);
-			LogEntry logEntry = new LogEntry();
-			logEntry.setContent(message);
-			logEntry.setCreationDate(new Date());
-			logEntry.setProcessId(step.getProzess().getId());
-			logEntry.setType(LogType.ERROR);
-
-			logEntry.setUserName("automatic");
-
-			ProcessManager.saveLogEntry(logEntry);
+			writeErrorToLog(message);
 			return false;
 		}
 
@@ -211,45 +175,18 @@ public class AltoValidationPlugin implements IValidatorPlugin, IPlugin {
 					}
 				} catch (SAXException e) {
 					String message = "Could not parse " + xsdFile.toAbsolutePath();
-					Helper.setFehlerMeldung(message);
-					LogEntry logEntry = new LogEntry();
-					logEntry.setContent(message);
-					logEntry.setCreationDate(new Date());
-					logEntry.setProcessId(step.getProzess().getId());
-					logEntry.setType(LogType.ERROR);
-
-					logEntry.setUserName("automatic");
-
-					ProcessManager.saveLogEntry(logEntry);
+					writeErrorToLog(message);
 					allValid = false;
 				} catch (IOException e) {
 					String message = "Could not read " + xml;
-					Helper.setFehlerMeldung(message);
-					LogEntry logEntry = new LogEntry();
-					logEntry.setContent(message);
-					logEntry.setCreationDate(new Date());
-					logEntry.setProcessId(step.getProzess().getId());
-					logEntry.setType(LogType.ERROR);
-
-					logEntry.setUserName("automatic");
-
-					ProcessManager.saveLogEntry(logEntry);
+					writeErrorToLog(message);
 					allValid = false;
 				}
 			}
 		} catch (IOException e1) {
 
 			String message = "Can not open " + validationFile + " for writing";
-			Helper.setFehlerMeldung(message);
-			LogEntry logEntry = new LogEntry();
-			logEntry.setContent(message);
-			logEntry.setCreationDate(new Date());
-			logEntry.setProcessId(step.getProzess().getId());
-			logEntry.setType(LogType.ERROR);
-
-			logEntry.setUserName("automatic");
-
-			ProcessManager.saveLogEntry(logEntry);
+			writeErrorToLog(message);
 			return false;
 		}
 
@@ -261,6 +198,19 @@ public class AltoValidationPlugin implements IValidatorPlugin, IPlugin {
 		}
 		return true;
 	}
+
+    private void writeErrorToLog(String message) {
+        Helper.setFehlerMeldung(message);
+        LogEntry logEntry = new LogEntry();
+        logEntry.setContent(message);
+        logEntry.setCreationDate(new Date());
+        logEntry.setProcessId(step.getProzess().getId());
+        logEntry.setType(LogType.ERROR);
+
+        logEntry.setUserName("automatic");
+
+        ProcessManager.saveLogEntry(logEntry);
+    }
 
 	static boolean validateAgainstXsd(Path xmlFile) throws SAXException, IOException {
 		try (InputStream is = StorageProvider.getInstance().newInputStream(xmlFile)) {
