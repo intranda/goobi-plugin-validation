@@ -11,10 +11,6 @@ pipeline {
     buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '15', daysToKeepStr: '90', numToKeepStr: '')
   }
 
-  triggers {
-    upstream 'goobi-workflow/goobi/master'
-  }
-  
   stages {
     stage('prepare') {
       steps {
@@ -32,7 +28,7 @@ pipeline {
   
   post {
     success {
-      archiveArtifacts artifacts: '**/target/*.jar, */plugin_*.xml', fingerprint: true
+      archiveArtifacts artifacts: '*/module-*/target/*.jar, */plugin_*.xml', fingerprint: true
     }
     changed {
       emailext(
