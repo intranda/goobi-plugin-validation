@@ -122,7 +122,7 @@
 		<dependency>
 			<groupId>de.intranda.goobi.workflow</groupId>
 			<artifactId>goobi-core-jar</artifactId>
-			<version>3.0.41</version>
+			<version>3.0.42</version>
 		</dependency>
 		<dependency>
 			<groupId>junit</groupId>
