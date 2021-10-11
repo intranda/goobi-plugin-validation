@@ -20,7 +20,7 @@ pipeline {
 
     stage('build') {
       steps {
-        sh 'mvn -f intrandaValidationPlugins/pom.xml install'
+        sh 'mvn -f plugin/pom.xml package'
         recordIssues enabledForFailure: true, aggregatingResults: true, tools: [java(), javaDoc()]
       }
     }
