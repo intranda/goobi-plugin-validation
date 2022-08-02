@@ -32,7 +32,6 @@ import org.jdom2.input.SAXBuilder;
 import de.sub.goobi.config.ConfigurationHelper;
 import de.sub.goobi.helper.Helper;
 import de.sub.goobi.helper.StorageProvider;
-import de.sub.goobi.helper.exceptions.DAOException;
 import de.sub.goobi.helper.exceptions.SwapException;
 import de.sub.goobi.persistence.managers.ProcessManager;
 import net.xeoh.plugins.base.annotations.PluginImplementation;
@@ -126,13 +125,7 @@ public class JP2ValidationCommand implements IValidatorPlugin, IPlugin {
         } catch (SwapException e1) {
             logger.error(e1);
             return false;
-        } catch (DAOException e1) {
-            logger.error(e1);
-            return false;
         } catch (IOException e1) {
-            logger.error(e1);
-            return false;
-        } catch (InterruptedException e1) {
             logger.error(e1);
             return false;
         }

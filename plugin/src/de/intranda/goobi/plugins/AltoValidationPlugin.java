@@ -79,12 +79,12 @@ public class AltoValidationPlugin implements IValidatorPlugin, IPlugin {
     public boolean validate() {
         try {
             jp2Folder = Paths.get(step.getProzess().getImagesOrigDirectory(true));
-        } catch (SwapException | DAOException | IOException | InterruptedException e) {
+        } catch (SwapException | DAOException | IOException e) {
             logger.error(e);
         }
         try {
             altoFolder = Paths.get(step.getProzess().getOcrAltoDirectory());
-        } catch (SwapException | DAOException | IOException | InterruptedException e) {
+        } catch (SwapException | IOException e) {
             logger.error(e);
         }
 
@@ -94,7 +94,7 @@ public class AltoValidationPlugin implements IValidatorPlugin, IPlugin {
             if (!StorageProvider.getInstance().isDirectory(validationFolder)) {
                 StorageProvider.getInstance().createDirectories(validationFolder);
             }
-        } catch (SwapException | DAOException | IOException | InterruptedException e) {
+        } catch (SwapException | IOException e) {
             logger.error(e);
         }
 
@@ -213,7 +213,7 @@ public class AltoValidationPlugin implements IValidatorPlugin, IPlugin {
         @Override
         public boolean accept(Path dir) throws IOException {
             dir = Paths.get(dir.toString().toLowerCase());
-            return (dir.endsWith(".jp2") || dir.endsWith(".JP2")); 
+            return (dir.endsWith(".jp2") || dir.endsWith(".JP2"));
         }
     };
     public static final DirectoryStream.Filter<Path> xmlFileFilter = new DirectoryStream.Filter<Path>() {
@@ -221,7 +221,7 @@ public class AltoValidationPlugin implements IValidatorPlugin, IPlugin {
         @Override
         public boolean accept(Path dir) throws IOException {
             dir = Paths.get(dir.toString().toLowerCase());
-            return (dir.endsWith(".xml")); 
+            return (dir.endsWith(".xml"));
         }
     };
 
