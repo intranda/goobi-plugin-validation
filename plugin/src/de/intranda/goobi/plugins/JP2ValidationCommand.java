@@ -17,7 +17,6 @@ import java.util.Scanner;
 import java.util.UUID;
 
 import org.apache.log4j.Logger;
-import org.goobi.beans.LogEntry;
 import org.goobi.beans.Process;
 import org.goobi.beans.Step;
 import org.goobi.production.enums.LogType;
@@ -33,7 +32,6 @@ import de.sub.goobi.config.ConfigurationHelper;
 import de.sub.goobi.helper.Helper;
 import de.sub.goobi.helper.StorageProvider;
 import de.sub.goobi.helper.exceptions.SwapException;
-import de.sub.goobi.persistence.managers.ProcessManager;
 import net.xeoh.plugins.base.annotations.PluginImplementation;
 
 @PluginImplementation
@@ -265,16 +263,7 @@ public class JP2ValidationCommand implements IValidatorPlugin, IPlugin {
                 // } else {
                 // ProcessObject po =
                 // ProcessManager.getProcessObjectForId(stepObject.getProcessId());
-
-                LogEntry logEntry = new LogEntry();
-                logEntry.setContent("Error in " + key + ": " + files.get(key));
-                logEntry.setCreationDate(new Date());
-                logEntry.setProcessId(step.getProzess().getId());
-                logEntry.setType(LogType.ERROR);
-
-                logEntry.setUserName("automatic");
-
-                ProcessManager.saveLogEntry(logEntry);
+                Helper.addMessageToProcessJournal(step.getProzess().getId(), LogType.ERROR, "Error in " + key + ": " + files.get(key), "automatic");
 
                 // }
                 returnvalue = false;
@@ -287,17 +276,7 @@ public class JP2ValidationCommand implements IValidatorPlugin, IPlugin {
     }
 
     private void updateGoobi(String message) {
-
-        LogEntry logEntry = new LogEntry();
-        logEntry.setContent(message);
-        logEntry.setCreationDate(new Date());
-        logEntry.setProcessId(step.getProzess().getId());
-        logEntry.setType(LogType.ERROR);
-
-        logEntry.setUserName("automatic");
-        ProcessManager.saveLogEntry(logEntry);
-
-        // }
+        Helper.addMessageToProcessJournal(step.getProzess().getId(), LogType.ERROR, message, "automatic");
     }
 
     public static String callShell(String command) throws IOException, InterruptedException {
