@@ -22,7 +22,6 @@ import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
 
 import org.apache.log4j.Logger;
-import org.goobi.beans.LogEntry;
 import org.goobi.beans.Process;
 import org.goobi.beans.Step;
 import org.goobi.production.enums.LogType;
@@ -36,7 +35,6 @@ import de.sub.goobi.helper.Helper;
 import de.sub.goobi.helper.StorageProvider;
 import de.sub.goobi.helper.exceptions.DAOException;
 import de.sub.goobi.helper.exceptions.SwapException;
-import de.sub.goobi.persistence.managers.ProcessManager;
 import net.xeoh.plugins.base.annotations.PluginImplementation;
 
 @PluginImplementation
@@ -182,15 +180,7 @@ public class AltoValidationPlugin implements IValidatorPlugin, IPlugin {
 
     private void writeErrorToLog(String message) {
         Helper.setFehlerMeldung(message);
-        LogEntry logEntry = new LogEntry();
-        logEntry.setContent(message);
-        logEntry.setCreationDate(new Date());
-        logEntry.setProcessId(step.getProzess().getId());
-        logEntry.setType(LogType.ERROR);
-
-        logEntry.setUserName("automatic");
-
-        ProcessManager.saveLogEntry(logEntry);
+        Helper.addMessageToProcessJournal(step.getProzess().getId(), LogType.ERROR, message, "automatic");
     }
 
     static boolean validateAgainstXsd(Path xmlFile) throws SAXException, IOException {
