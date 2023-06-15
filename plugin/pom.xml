@@ -2,14 +2,14 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>de.intranda.plugin.validation</groupId>
   <artifactId>intrandaValidation</artifactId>
-  <version>23.05.1</version>
+  <version>23.05.2</version>
   <properties>
     <goobi.pluginversion>0.0.1-SNAPSHOT</goobi.pluginversion>
     <jar.name>plugin_intranda_validation</jar.name>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
-    <goobi.version>23.05.1</goobi.version>
+    <goobi.version>23.05.2</goobi.version>
   </properties>
   <build>
     <sourceDirectory>src</sourceDirectory>
