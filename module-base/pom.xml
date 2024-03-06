@@ -2,9 +2,9 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>io.goobi.workflow.plugin</groupId>
-    <artifactId>plugin-validation-intrandaValidation</artifactId>
+    <artifactId>plugin-validation</artifactId>
     <version>24.03-SNAPSHOT</version>
   </parent>
-  <artifactId>plugin-validation-intrandaValidation-base</artifactId>
+  <artifactId>plugin-validation-base</artifactId>
   <packaging>jar</packaging>
 </project>
