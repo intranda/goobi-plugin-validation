@@ -1,6 +1,9 @@
 # Goobi workflow Plugin: goobi-plugin-validation
 
-<img src="https://goobi.io/wp-content/uploads/logo_goobi_plugin.png" align="right" style="margin:0 0 20px 20px;" alt="Plugin for Goobi workflow" width="175" height="109">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://goobi.io/logo_goobi_workflow_dark.png">
+  <img src="https://goobi.io/logo_goobi_workflow.png" align="right" alt="Plugin for Goobi workflow" width="240" height="132" hspace="20" vspace="10">
+</picture>
 
 This is a set of multiple Validation plugins for Goobi workflow to validate, if filenames for ALTO files and for image files match, if the ALTO files are valid according to the XSD and if the JP2 files validate with jpylyzer. This plugin was developed for the Wellcome Library in London. It might be needed to adapt this plugin for other use cases.
 
